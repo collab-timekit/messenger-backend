@@ -1,0 +1,15 @@
+database:
+  host: ${DATABASE_HOST}
+  port: ${DATABASE_PORT}
+  user: ${DATABASE_USER}
+  password: ${DATABASE_PASSWORD}
+  dbname: ${DATABASE_DBNAME}
+  sslmode: ${DATABASE_SSLMODE}
+  dbschema: ${DATABASE_DBSCHEMA}
+
+server:
+  port: ${SERVER_PORT}
+
+keycloak:
+  issuer: ${KEYCLOAK_ISSUER}
+  client_id: ${KEYCLOAK_CLIENT_ID}

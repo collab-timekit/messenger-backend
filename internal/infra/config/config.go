@@ -2,7 +2,10 @@ package config
 
 import (
 	"log"
+	"os"
+	"regexp"
 	"strings"
+
 	"github.com/spf13/viper"
 )
 
@@ -10,7 +13,7 @@ import (
 type Config struct {
 	Database DatabaseConfig `mapstructure:"database"`
 	Server   ServerConfig   `mapstructure:"server"`
-	Keycloak   KeycloakConfig  `mapstructure:"keycloak"`
+	Keycloak KeycloakConfig `mapstructure:"keycloak"`
 }
 
 // DatabaseConfig holds the configuration settings for the database connection.
@@ -26,7 +29,7 @@ type DatabaseConfig struct {
 
 // ServerConfig holds the configuration settings for the server.
 type ServerConfig struct {
-	Port       int    `mapstructure:"port"`
+	Port int `mapstructure:"port"`
 }
 
 // KeycloakConfig holds the configuration settings for Keycloak integration.
@@ -35,19 +38,37 @@ type KeycloakConfig struct {
 	ClientID string `mapstructure:"client_id"`
 }
 
-// LoadConfig reads the configuration from the file and environment variables and returns a Config struct.
+func expandEnvVariables(content string) string {
+    re := regexp.MustCompile(`\$\{([^}]+)\}`)
+    return re.ReplaceAllStringFunc(content, func(s string) string {
+        key := re.FindStringSubmatch(s)[1]
+        value := os.Getenv(key)
+        if value == "" {
+            log.Printf("Warning: environment variable %s is not set", key)
+        }
+        return value
+    })
+}
+
+// LoadConfig reads the configuration from a YAML file, expands environment variables, and unmarshals it into a Config struct.
 func LoadConfig() *Config {
-	viper.SetConfigName("dev-config")
+	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(".")
 	viper.AddConfigPath("./config")
 
-	viper.AutomaticEnv()
-    viper.SetEnvPrefix("MESSENGER")
-    viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-
-	if err := viper.ReadInConfig(); err != nil {
+	// Read raw YAML content
+	raw, err := os.ReadFile("./config/config.yaml")
+	if err != nil {
 		log.Fatalf("Error reading config file: %v", err)
+	}
+
+	// Expand ${VAR} -> env
+	expanded := expandEnvVariables(string(raw))
+
+	// Read from string
+	if err := viper.ReadConfig(strings.NewReader(expanded)); err != nil {
+		log.Fatalf("Error parsing config: %v", err)
 	}
 
 	var cfg Config
