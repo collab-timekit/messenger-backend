@@ -1,0 +1,23 @@
+# Go binary files
+/bin/
+/obj/
+
+# Dependency directories
+/vendor/
+
+# Go-specific files
+*.test
+*.out
+
+# IDE files
+.vscode/
+.idea/
+
+# macOS system files
+.DS_Store
+
+# Windows system files
+Thumbs.db
+
+# Log files
+*.log
