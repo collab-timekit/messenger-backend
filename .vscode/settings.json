@@ -1,0 +1,36 @@
+{
+  "go.useLanguageServer": true,
+  "gopls": {
+    "build.experimentalWorkspaceModule": true,
+    "ui.completion.usePlaceholders": true,
+    "analyses": {
+      "unusedparams": true,
+      "shadow": true
+    },
+    "staticcheck": true
+  },
+  "go.formatTool": "gofmt",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "always"
+  },
+  "[go]": {
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "always"
+    },
+    "editor.formatOnSave": true
+  },
+  "go.lintTool": "golint",
+  "go.lintOnSave": "package",
+  "go.testFlags": [
+    "-v"
+  ],
+  "go.delveConfig": {
+    "dlvLoadConfig": {
+      "maxStringLen": 1000,
+      "followPointers": true,
+      "maxArrayValues": 100,
+      "maxStructFields": -1
+    }
+  }
+}
