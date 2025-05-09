@@ -12,5 +12,5 @@ WORKDIR /root/
 COPY --from=builder /app/app .
 COPY --from=builder /app/config /root/config
 
-EXPOSE 8080
+EXPOSE 8083
 CMD ["./app"]

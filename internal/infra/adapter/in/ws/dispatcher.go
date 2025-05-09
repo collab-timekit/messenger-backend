@@ -2,6 +2,7 @@ package ws
 
 import (
     "time"
+    "log"
 )
 
 // DispatchMessage routes an incoming message to the appropriate handler based on its type.
@@ -14,7 +15,7 @@ func DispatchMessage(sender *Client, msg IncomingMessage) {
 		case MessageTypeTyping:
 			handleTypingMessage(sender, msg)
 		default:
-			// Unknown type
+            log.Println("Unknown message type:", msg.Type)
     }
 }
 
