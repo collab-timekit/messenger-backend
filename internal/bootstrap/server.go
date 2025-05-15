@@ -1,36 +1,31 @@
 package bootstrap
 
 import (
-	"messenger/internal/infra/adapter/in/rest"
 	"messenger/internal/infra/adapter/in/ws"
-
 	"github.com/gin-gonic/gin"
 )
 
 // StartServer initializes the server and starts listening for incoming requests.
 func StartServer() error {
-    container := buildContainer()
+    container := BuildContainer()
 
-    return container.Invoke(func(
-        chatHandler *rest.ChatHandler,
-        messageHandler *rest.MessageHandler,
-        jwtMiddleware gin.HandlerFunc,
-        wsHub *ws.Hub,
-        wsHandler gin.HandlerFunc,
-    ) error {
+    return container.Invoke(func(p ServerParams) error {
         r := gin.Default()
 
         // Start the WebSocket hub in a separate goroutine
-        go wsHub.Run()
+        go p.WsHub.Run()
 
         api := r.Group("/api")
         // api.Use(jwtMiddleware)
+        api.Use(p.CorsMiddleware)
 
-        chatHandler.RegisterRoutes(api)
-        messageHandler.RegisterRoutes(api)
+        p.ConversationMemberHandler.RegisterRoutes(api)
+        p.ConversationHandler.RegisterRoutes(api)
+        p.KeycloakHandler.RegisterRoutes(api)
+        p.MessageHandler.RegisterRoutes(api)
 
         r.GET("/ws", func(c *gin.Context) {
-			ws.ServeWs(c, wsHub)
+			ws.ServeWs(c, p.WsHub)
 		})
 
         return r.Run(":8083")

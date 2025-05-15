@@ -13,3 +13,6 @@ server:
 keycloak:
   issuer: ${KEYCLOAK_ISSUER}
   client_id: ${KEYCLOAK_CLIENT_ID}
+  client_secret: ${KEYCLOAK_CLIENT_SECRET}
+  realm: ${KEYCLOAK_REALM}
+  base_url: ${KEYCLOAK_BASE_URL}

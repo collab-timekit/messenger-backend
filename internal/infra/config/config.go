@@ -36,6 +36,9 @@ type ServerConfig struct {
 type KeycloakConfig struct {
 	Issuer   string `mapstructure:"issuer"`
 	ClientID string `mapstructure:"client_id"`
+	ClientSecret string `mapstructure:"client_secret"`
+	Realm   string `mapstructure:"realm"`
+	BaseURL string `mapstructure:"base_url"`
 }
 
 func expandEnvVariables(content string) string {

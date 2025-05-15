@@ -1,0 +1,60 @@
+package repository
+
+import (
+	"messenger/internal/app/port/out"
+	"messenger/internal/domain"
+	"messenger/internal/infra/adapter/out/persistence/model"
+
+	"github.com/google/uuid"
+	"github.com/jinzhu/copier"
+	"gorm.io/gorm"
+)
+
+type ConversationRepository struct {
+	db *gorm.DB
+}
+
+func NewConversationRepository(db *gorm.DB) out.ConversationRepository {
+	return &ConversationRepository{db: db}
+}
+
+func (r *ConversationRepository) GetAllByUserID(userID uuid.UUID) ([]domain.Conversation, error) {
+	var dbConvs []model.ConversationModel
+	err := r.db.
+		Joins("JOIN conversation_members ON conversation_members.conversation_id = conversations.id").
+		Where("conversation_members.user_id = ?", userID).
+		Preload("Members").
+		Preload("Messages").
+		Find(&dbConvs).Error
+	if err != nil {
+		return nil, err
+	}
+
+	var result []domain.Conversation
+	for _, dbConv := range dbConvs {
+		var conv domain.Conversation
+		_ = copier.Copy(&conv, &dbConv)
+
+		// ręcznie kopiujemy nested pola
+		conv.Members = make([]domain.ConversationMember, len(dbConv.Members))
+		_ = copier.Copy(&conv.Members, &dbConv.Members)
+
+		conv.Messages = make([]domain.Message, len(dbConv.Messages))
+		_ = copier.Copy(&conv.Messages, &dbConv.Messages)
+
+		result = append(result, conv)
+	}
+
+	return result, nil
+}
+
+func (r *ConversationRepository) Create(conv *domain.Conversation) error {
+	var dbConv model.ConversationModel
+	_ = copier.Copy(&dbConv, conv)
+
+	// nested manualnie (lepiej kontrolować)
+	_ = copier.Copy(&dbConv.Members, &conv.Members)
+	_ = copier.Copy(&dbConv.Messages, &conv.Messages)
+
+	return r.db.Create(&dbConv).Error
+}
