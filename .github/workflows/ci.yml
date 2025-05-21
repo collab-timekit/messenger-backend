@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.24.2'
+
+    - name: Install dependencies
+      run: go mod tidy
+
+    - name: Run tests (if any)
+      run: |
+        if find . -name '*_test.go' | grep -q .; then
+          echo "Running go test..."
+          go test ./...
+        else
+          echo "No tests found, skipping."
+        fi
+
+    - name: Run SonarQube analysis
+      uses: SonarSource/sonarqube-scan-action@v5
+      with:
+        args: >
+          -Dsonar.projectKey=collab-timekit_messenger-backend
+          -Dsonar.organization=collab-timekit
+          -Dsonar.sources=.
+          -Dsonar.go.coverage.reportPaths=coverage.out
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+    - name: Upload test coverage
+      if: success()
+      run: |
+        go test -coverprofile=coverage.out ./...
