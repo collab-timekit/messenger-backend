@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// ConversationMemberRepository defines the methods for managing conversation members.
 type ConversationMemberRepository interface {
 	AddMember(member *domain.ConversationMember) error
 	RemoveMember(conversationID, userID uuid.UUID) error

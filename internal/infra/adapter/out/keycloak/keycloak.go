@@ -45,8 +45,7 @@ func (kc *KeycloakClient) getAccessToken() (string, error) {
 
 	tokenURL := fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", kc.BaseURL, kc.Realm)
 
-	// 🔵 LOG REQUEST INFO
-	fmt.Println("➡️ Requesting access token from Keycloak:")
+	fmt.Println("IN Requesting access token from Keycloak:")
 	fmt.Printf("URL: %s\n", tokenURL)
 	fmt.Printf("Payload: %s\n", data.Encode())
 
@@ -57,7 +56,7 @@ func (kc *KeycloakClient) getAccessToken() (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body) // loguj body błędu
+		body, _ := io.ReadAll(resp.Body)
 		return "", fmt.Errorf("failed to get access token: %s\nBody: %s", resp.Status, string(body))
 	}
 
@@ -68,8 +67,7 @@ func (kc *KeycloakClient) getAccessToken() (string, error) {
 		return "", err
 	}
 
-	// 🔵 LOG SUCCESS
-	fmt.Println("✅ Access token received successfully.")
+	fmt.Println("Access token received successfully.")
 
 	return res.AccessToken, nil
 }
@@ -89,8 +87,7 @@ func (kc *KeycloakClient) GetUsers(filter string) ([]User, error) {
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
 
-	// 🔵 LOG REQUEST INFO
-	fmt.Println("➡️ Sending request to Keycloak:")
+	fmt.Println("IN Sending request to Keycloak:")
 	fmt.Printf("URL: %s\n", fullURL)
 	fmt.Printf("Authorization: Bearer %s...\n", token[:10]) // log only start of token for safety
 	fmt.Printf("Headers: %+v\n", req.Header)

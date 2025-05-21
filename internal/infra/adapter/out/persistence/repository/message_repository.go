@@ -12,10 +12,12 @@ import (
 	"gorm.io/gorm"
 )
 
+// MessageRepository implements the MessageRepository interface.
 type MessageRepository struct {
 	db *gorm.DB
 }
 
+// NewMessageRepository creates a new instance of MessageRepository.
 func NewMessageRepository(db *gorm.DB) out.MessageRepository {
 	return &MessageRepository{db: db}
 }
@@ -28,8 +30,6 @@ func (r *MessageRepository) SendMessage(msg *domain.Message) error {
 }
 
 // GetMessages returns messages from a conversation with pagination.
-// 'before' is optional. If present, fetch messages older than that timestamp.
-// Results are returned ascending (oldest to newest).
 func (r *MessageRepository) GetMessages(conversationID uuid.UUID, limit int, before *time.Time) ([]domain.Message, error) {
 	var dbMessages []model.MessageModel
 
@@ -50,12 +50,12 @@ func (r *MessageRepository) GetMessages(conversationID uuid.UUID, limit int, bef
 	var messages []domain.Message
 	_ = copier.Copy(&messages, &dbMessages)
 
-	// Because we query DESC, reverse to return ASC (oldest → newest)
 	slices.Reverse(messages)
 
 	return messages, nil
 }
 
+// GetByID retrieves a message by its ID.
 func (r *ConversationRepository) GetByID(id uuid.UUID) (*domain.Conversation, error) {
 	var modelConv model.ConversationModel
 	if err := r.db.Preload("Members").First(&modelConv, "id = ?", id).Error; err != nil {

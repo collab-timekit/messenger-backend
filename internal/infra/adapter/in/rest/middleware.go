@@ -10,13 +10,14 @@ import (
 	"messenger/internal/infra/config"
 )
 
+// JWTMiddleware is a middleware that verifies JWT tokens using Keycloak.
 func JWTMiddleware(cfg *config.Config) gin.HandlerFunc {
 	provider, err := oidc.NewProvider(context.Background(), cfg.Keycloak.Issuer)
 	if err != nil {
 		panic(err)
 	}
 
-	verifier := provider.Verifier(&oidc.Config{ClientID: cfg.Keycloak.ClientID})
+	verifier := provider.Verifier(&oidc.Config{ClientID: cfg.Keycloak.ClientID, SkipIssuerCheck: true}) //TODO: remove SkipIssuerCheck in production
 
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
@@ -28,7 +29,7 @@ func JWTMiddleware(cfg *config.Config) gin.HandlerFunc {
 		token := strings.TrimPrefix(authHeader, "Bearer ")
 		idToken, err := verifier.Verify(c.Request.Context(), token)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token: " + err.Error()})
 			return
 		}
 

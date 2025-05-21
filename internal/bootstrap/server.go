@@ -5,20 +5,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// StartServer initializes the server and starts listening for incoming requests.
 func StartServer() error {
     container := BuildContainer()
 
     return container.Invoke(func(p ServerParams) error {
         r := gin.Default()
 
-        // Start the WebSocket hub in a separate goroutine
-        go p.WsHub.Run()
+        r.Use(p.CorsMiddleware)
 
         api := r.Group("/api")
-        // api.Use(jwtMiddleware)
-        api.Use(p.CorsMiddleware)
+        api.Use(p.JwtMiddleware)
 
+        go p.WsHub.Run()
         p.ConversationMemberHandler.RegisterRoutes(api)
         p.ConversationHandler.RegisterRoutes(api)
         p.KeycloakHandler.RegisterRoutes(api)

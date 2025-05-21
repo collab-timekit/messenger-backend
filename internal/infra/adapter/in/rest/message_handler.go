@@ -11,14 +11,17 @@ import (
 	"github.com/google/uuid"
 )
 
+// MessageHandler handles HTTP requests related to messages.
 type MessageHandler struct {
 	useCase in.MessageUseCase
 }
 
+// NewMessageHandler creates a new instance of MessageHandler.
 func NewMessageHandler(useCase in.MessageUseCase) *MessageHandler {
 	return &MessageHandler{useCase: useCase}
 }
 
+// RegisterRoutes registers the routes for message operations.
 func (h *MessageHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	rg.POST("/messages", h.CreateMessage)
 	rg.GET("/messages/:conversation_id", h.GetMessages)
@@ -26,7 +29,7 @@ func (h *MessageHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	rg.DELETE("/messages/:message_id", h.DeleteMessage)
 }
 
-// CreateMessage godoc
+// CreateMessage creates a new message in a conversation.
 func (h *MessageHandler) CreateMessage(c *gin.Context) {
 	userID, err := security.ExtractUserID(c)
 	if err != nil {
@@ -39,8 +42,9 @@ func (h *MessageHandler) CreateMessage(c *gin.Context) {
 		Content        string    `json:"content" binding:"required"`
 	}
 
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	bindErr := c.ShouldBindJSON(&req)
+	if bindErr != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": bindErr.Error()})
 		return
 	}
 
@@ -53,7 +57,7 @@ func (h *MessageHandler) CreateMessage(c *gin.Context) {
 	c.Status(http.StatusCreated)
 }
 
-// GetMessages godoc
+// GetMessages retrieves messages for a given conversation with optional pagination.
 func (h *MessageHandler) GetMessages(c *gin.Context) {
 	conversationID, err := uuid.Parse(c.Param("conversation_id"))
 	if err != nil {
@@ -61,17 +65,16 @@ func (h *MessageHandler) GetMessages(c *gin.Context) {
 		return
 	}
 
-	// optional query params
-	limit := 50 // default
+	limit := 50
 	if l := c.Query("limit"); l != "" {
-		if parsed, err := strconv.Atoi(l); err == nil {
+		if parsed, parseErr := strconv.Atoi(l); parseErr == nil {
 			limit = parsed
 		}
 	}
 
 	var before *time.Time
 	if b := c.Query("before"); b != "" {
-		if parsedTime, err := time.Parse(time.RFC3339, b); err == nil {
+		if parsedTime, parseErr := time.Parse(time.RFC3339, b); parseErr == nil {
 			before = &parsedTime
 		}
 	}
@@ -85,7 +88,7 @@ func (h *MessageHandler) GetMessages(c *gin.Context) {
 	c.JSON(http.StatusOK, messages)
 }
 
-// EditMessage godoc
+// EditMessage allows editing an existing message.
 func (h *MessageHandler) EditMessage(c *gin.Context) {
 	_, err := security.ExtractUserID(c)
 	if err != nil {
@@ -108,8 +111,6 @@ func (h *MessageHandler) EditMessage(c *gin.Context) {
 		return
 	}
 
-	// TODO: you can check here if userID is the sender, if needed
-
 	if err := h.useCase.EditMessage(messageID, req.NewContent); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not edit message"})
 		return
@@ -118,7 +119,7 @@ func (h *MessageHandler) EditMessage(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-// DeleteMessage godoc
+// DeleteMessage deletes a message from a conversation.
 func (h *MessageHandler) DeleteMessage(c *gin.Context) {
 	_, err := security.ExtractUserID(c)
 	if err != nil {
@@ -131,8 +132,6 @@ func (h *MessageHandler) DeleteMessage(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid message id"})
 		return
 	}
-
-	// TODO: you can check here if userID is the sender, if needed
 
 	if err := h.useCase.DeleteMessage(messageID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not delete message"})

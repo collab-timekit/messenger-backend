@@ -9,20 +9,24 @@ import (
 	"github.com/google/uuid"
 )
 
+// ConversationMemberHandler handles HTTP requests related to conversation members.
 type ConversationMemberHandler struct {
 	useCase in.ConversationMemberUseCase
 }
 
+// NewConversationMemberHandler creates a new instance of ConversationMemberHandler.
 func NewConversationMemberHandler(useCase in.ConversationMemberUseCase) *ConversationMemberHandler {
 	return &ConversationMemberHandler{useCase: useCase}
 }
 
+// RegisterRoutes registers the routes for conversation member operations.
 func (h *ConversationMemberHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	rg.GET("/chats/:id/members", h.ListMembers)
 	rg.POST("/chats/:id/members", h.AddMember)
 	rg.DELETE("/chats/:id/members/:userID", h.RemoveMember)
 }
 
+// ListMembers lists all members of a conversation.
 func (h *ConversationMemberHandler) ListMembers(c *gin.Context) {
 	userID, err := security.ExtractUserID(c)
 	if err != nil {
@@ -51,6 +55,7 @@ func (h *ConversationMemberHandler) ListMembers(c *gin.Context) {
 	c.JSON(http.StatusOK, members)
 }
 
+// AddMember adds a new member to a conversation.
 func (h *ConversationMemberHandler) AddMember(c *gin.Context) {
 	var req struct {
 		UserID string `json:"user_id" binding:"required"`
@@ -82,6 +87,7 @@ func (h *ConversationMemberHandler) AddMember(c *gin.Context) {
 	c.Status(http.StatusCreated)
 }
 
+// RemoveMember removes a member from a conversation.
 func (h *ConversationMemberHandler) RemoveMember(c *gin.Context) {
 	convID, err := uuid.Parse(c.Param("id"))
 	if err != nil {

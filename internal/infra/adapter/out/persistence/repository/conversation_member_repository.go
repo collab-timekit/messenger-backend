@@ -11,10 +11,12 @@ import (
 	"gorm.io/gorm"
 )
 
+// ConversationMemberRepository implements the ConversationMemberRepository interface.
 type ConversationMemberRepository struct {
 	db *gorm.DB
 }
 
+// NewConversationMemberRepository creates a new instance of ConversationMemberRepository.
 func NewConversationMemberRepository(db *gorm.DB) out.ConversationMemberRepository {
 	return &ConversationMemberRepository{db: db}
 }

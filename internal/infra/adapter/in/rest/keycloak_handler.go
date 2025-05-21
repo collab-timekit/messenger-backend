@@ -8,18 +8,22 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// KeycloakHandler handles requests related to Keycloak operations.
 type KeycloakHandler struct {
 	Client *keycloak.KeycloakClient
 }
 
+// NewKeycloakHandler creates a new instance of KeycloakHandler.
 func NewKeycloakHandler(client *keycloak.KeycloakClient) *KeycloakHandler {
 	return &KeycloakHandler{Client: client}
 }
 
+// RegisterRoutes registers the routes for Keycloak operations.
 func (h *KeycloakHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	rg.GET("/keycloak/users", h.GetUsers)
 }
 
+// GetUsers retrieves users from Keycloak based on the provided filter.
 func (h *KeycloakHandler) GetUsers(c *gin.Context) {
 	filter := c.Query("filter")
 	if filter == "" {

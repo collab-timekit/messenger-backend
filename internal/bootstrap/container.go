@@ -33,7 +33,6 @@ func BuildContainer() *dig.Container {
 	cfg := config.LoadConfig()
 	hub := ws.NewHub()
 
-    // Registering the basic dependencies (database, config, etc.)
 	c.Provide(func() *config.Config {
 		return cfg
 	}) 
@@ -46,30 +45,26 @@ func BuildContainer() *dig.Container {
 		return config.InitDB(cfg.Database)
 	})
 
-    c.Provide(func(cfg *config.Config) gin.HandlerFunc {
-		return rest.JWTMiddleware(cfg)
-	}, dig.Name("jwt"))
-
 	c.Provide(func(cfg *config.Config) gin.HandlerFunc {
 		return config.CORSMiddleware()
 	}, dig.Name("cors"))
 
-	// Registering the websocket hub
+	c.Provide(func(cfg *config.Config) gin.HandlerFunc {
+		return rest.JWTMiddleware(cfg)
+	}, dig.Name("jwt"))
+
 	c.Provide(func() *ws.Hub {
 		return hub
 	})
 
-	// Register repositories
 	c.Provide(repository.NewConversationMemberRepository)
 	c.Provide(repository.NewConversationRepository)
 	c.Provide(repository.NewMessageRepository)
 
-	// Register services
 	c.Provide(service.NewConversationService)
 	c.Provide(service.NewConversationMemberService)
 	c.Provide(service.NewMessageService)
 
-    // Register message repo, service, and handler
     c.Provide(repository.NewMessageRepository)
     c.Provide(service.NewMessageService)
     c.Provide(rest.NewMessageHandler)

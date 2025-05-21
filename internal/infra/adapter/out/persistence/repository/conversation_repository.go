@@ -10,14 +10,17 @@ import (
 	"gorm.io/gorm"
 )
 
+// ConversationRepository implements the ConversationRepository interface.
 type ConversationRepository struct {
 	db *gorm.DB
 }
 
+// NewConversationRepository creates a new instance of ConversationRepository.
 func NewConversationRepository(db *gorm.DB) out.ConversationRepository {
 	return &ConversationRepository{db: db}
 }
 
+// GetAllByUserID retrieves all conversations for a given user ID.
 func (r *ConversationRepository) GetAllByUserID(userID uuid.UUID) ([]domain.Conversation, error) {
 	var dbConvs []model.ConversationModel
 	err := r.db.
@@ -35,7 +38,6 @@ func (r *ConversationRepository) GetAllByUserID(userID uuid.UUID) ([]domain.Conv
 		var conv domain.Conversation
 		_ = copier.Copy(&conv, &dbConv)
 
-		// ręcznie kopiujemy nested pola
 		conv.Members = make([]domain.ConversationMember, len(dbConv.Members))
 		_ = copier.Copy(&conv.Members, &dbConv.Members)
 
@@ -48,11 +50,11 @@ func (r *ConversationRepository) GetAllByUserID(userID uuid.UUID) ([]domain.Conv
 	return result, nil
 }
 
+// Create creates a new conversation in the database.
 func (r *ConversationRepository) Create(conv *domain.Conversation) error {
 	var dbConv model.ConversationModel
 	_ = copier.Copy(&dbConv, conv)
 
-	// nested manualnie (lepiej kontrolować)
 	_ = copier.Copy(&dbConv.Members, &conv.Members)
 	_ = copier.Copy(&dbConv.Messages, &conv.Messages)
 

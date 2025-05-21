@@ -6,17 +6,17 @@ import (
 	"github.com/google/uuid"
 )
 
-// MessageModel represents a message entity in the system.
+// MessageModel represents the structure of a message in the persistence layer.
 type MessageModel struct {
-    ID             uuid.UUID `gorm:"type:uuid;primaryKey"`
-    ConversationID uuid.UUID
-    SenderID       uuid.UUID
-    Content        string
-    CreatedAt      time.Time
-    Edited         bool
+	ID             uuid.UUID `gorm:"type:uuid;primaryKey"`
+	ConversationID uuid.UUID `gorm:"type:uuid;not null;index"`
+	SenderID       uuid.UUID `gorm:"type:uuid;not null"`
+	Content        string
+	CreatedAt      time.Time
+	Edited         bool
 }
 
-// TableName specifies the database table name for the MessageModel.
+// TableName returns the name of the table in the database.
 func (MessageModel) TableName() string {
     return "messages"
 }

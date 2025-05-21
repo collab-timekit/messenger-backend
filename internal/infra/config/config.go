@@ -60,16 +60,13 @@ func LoadConfig() *Config {
 	viper.AddConfigPath(".")
 	viper.AddConfigPath("./config")
 
-	// Read raw YAML content
 	raw, err := os.ReadFile("./config/config.yaml")
 	if err != nil {
 		log.Fatalf("Error reading config file: %v", err)
 	}
 
-	// Expand ${VAR} -> env
 	expanded := expandEnvVariables(string(raw))
 
-	// Read from string
 	if err := viper.ReadConfig(strings.NewReader(expanded)); err != nil {
 		log.Fatalf("Error parsing config: %v", err)
 	}

@@ -1,8 +1,10 @@
 package service
 
 import (
+	"messenger/internal/app/port/in"
 	"messenger/internal/app/port/out"
 	"messenger/internal/domain"
+
 	"github.com/google/uuid"
 )
 
@@ -12,7 +14,7 @@ type ConversationMemberService struct {
 }
 
 // NewConversationMemberService creates a new instance of ConversationMemberService.
-func NewConversationMemberService(memberRepo out.ConversationMemberRepository) *ConversationMemberService {
+func NewConversationMemberService(memberRepo out.ConversationMemberRepository) in.ConversationMemberUseCase {
 	return &ConversationMemberService{memberRepo: memberRepo}
 }
 

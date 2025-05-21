@@ -2,6 +2,7 @@ package security
 
 import (
 	"errors"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -19,4 +20,23 @@ func ExtractUserID(c *gin.Context) (uuid.UUID, error) {
 		return uuid.Nil, errors.New("invalid subject claim")
 	}
 	return uuid.Parse(sub)
+}
+
+// RequireRole is a middleware that checks if the user has one of the allowed roles.
+func RequireRole(allowedRoles ...string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		roleAny, exists := c.Get("role")
+		if !exists {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "role missing"})
+			return
+		}
+		role := roleAny.(string)
+		for _, allowed := range allowedRoles {
+			if role == allowed {
+				c.Next()
+				return
+			}
+		}
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+	}
 }

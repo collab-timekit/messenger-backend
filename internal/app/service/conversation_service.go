@@ -36,8 +36,9 @@ func (s *ConversationService) CreateConversation(conv *domain.Conversation) erro
 	return s.conversationRepo.Create(conv)
 }
 
+
+// GetConversationByID returns a conversation by its ID if the user is a member.
 func (s *ConversationService) GetConversationByID(conversationID, userID uuid.UUID) (*domain.Conversation, error) {
-	// Sprawdź, czy użytkownik jest członkiem
 	isMember, err := s.memberRepo.IsMember(conversationID, userID)
 	if err != nil {
 		return nil, err

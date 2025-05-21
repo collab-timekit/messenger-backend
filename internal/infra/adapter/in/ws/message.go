@@ -1,13 +1,10 @@
 package ws
 
+// MessageTypeChat constants
 const (
-    // MessageTypeChat represents a chat message type.
     MessageTypeChat   string = "chat"
-	// MessageTypeStatus represents a status message type.
     MessageTypeStatus string = "status"
-	// MessageTypeTyping represents a typing message type.
     MessageTypeTyping string = "typing"
-	// MessageTypeError represents an error message type.
     MessageTypeError  string = "error"
 )
 

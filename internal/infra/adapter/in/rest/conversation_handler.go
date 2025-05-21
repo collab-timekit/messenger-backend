@@ -10,20 +10,24 @@ import (
 	"github.com/google/uuid"
 )
 
+// ConversationHandler handles HTTP requests related to conversations.
 type ConversationHandler struct {
 	useCase in.ConversationUseCase
 }
 
+// NewConversationHandler creates a new instance of ConversationHandler.
 func NewConversationHandler(useCase in.ConversationUseCase) *ConversationHandler {
 	return &ConversationHandler{useCase: useCase}
 }
 
+// RegisterRoutes registers the routes for conversation operations.
 func (h *ConversationHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	rg.POST("/chats", h.CreateChat)
 	rg.GET("/chats", h.ListChats)
 	rg.GET("/chats/:id", h.GetChatByID)
 }
 
+// CreateChat creates a new conversation.
 func (h *ConversationHandler) CreateChat(c *gin.Context) {
 	userID, err := security.ExtractUserID(c)
 	if err != nil {
@@ -32,7 +36,7 @@ func (h *ConversationHandler) CreateChat(c *gin.Context) {
 	}
 
 	var req struct {
-		Type    string   `json:"type" binding:"required"`
+		Type    domain.ConversationType   `json:"type" binding:"required"`
 		Name    *string  `json:"name"`
 		Members []string `json:"members"` // UUID w stringach
 	}
@@ -70,6 +74,7 @@ func (h *ConversationHandler) CreateChat(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"id": conv.ID})
 }
 
+// ListChats lists all conversations for the authenticated user.
 func (h *ConversationHandler) ListChats(c *gin.Context) {
 	userID, err := security.ExtractUserID(c)
 	if err != nil {
@@ -86,6 +91,7 @@ func (h *ConversationHandler) ListChats(c *gin.Context) {
 	c.JSON(http.StatusOK, convs)
 }
 
+// GetChatByID retrieves a conversation by its ID.
 func (h *ConversationHandler) GetChatByID(c *gin.Context) {
 	userID, err := security.ExtractUserID(c)
 	if err != nil {
