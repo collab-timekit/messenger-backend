@@ -9,5 +9,6 @@ import (
 type ConversationUseCase interface {
 	GetUserConversations(userID uuid.UUID) ([]domain.Conversation, error)
 	CreateConversation(conv *domain.Conversation) error
+	GetOrCreatePrivateConversation(userID, recipientID uuid.UUID) (uuid.UUID, error)
 	GetConversationByID(conversationID uuid.UUID, userID uuid.UUID) (*domain.Conversation, error)
 }

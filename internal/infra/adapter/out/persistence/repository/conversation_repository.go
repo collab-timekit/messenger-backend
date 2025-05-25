@@ -60,3 +60,26 @@ func (r *ConversationRepository) Create(conv *domain.Conversation) error {
 
 	return r.db.Create(&dbConv).Error
 }
+
+// FindPrivateConversationIDBetweenUsers returns the ID of a private conversation between two users if it exists.
+func (r *ConversationRepository) FindPrivateConversationIDBetweenUsers(user1, user2 uuid.UUID) (*uuid.UUID, error) {
+	var convID uuid.UUID
+	err := r.db.Raw(`
+		SELECT c.id
+		FROM conversations c
+		JOIN conversation_members cm ON cm.conversation_id = c.id
+		WHERE c.type = 'PRIVATE'
+		AND cm.user_id IN (?, ?)
+		GROUP BY c.id
+		HAVING COUNT(DISTINCT cm.user_id) = 2
+		LIMIT 1
+	`, user1, user2).Scan(&convID).Error
+
+	if err != nil {
+		return nil, err
+	}
+	if convID == uuid.Nil {
+		return nil, nil
+	}
+	return &convID, nil
+}

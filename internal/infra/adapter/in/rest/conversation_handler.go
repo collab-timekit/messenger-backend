@@ -22,13 +22,14 @@ func NewConversationHandler(useCase in.ConversationUseCase) *ConversationHandler
 
 // RegisterRoutes registers the routes for conversation operations.
 func (h *ConversationHandler) RegisterRoutes(rg *gin.RouterGroup) {
-	rg.POST("/chats", h.CreateChat)
+	rg.POST("/chats/private", h.CreatePrivateChat)
+	rg.POST("/chats/channel", h.CreateChannelChat)
 	rg.GET("/chats", h.ListChats)
 	rg.GET("/chats/:id", h.GetChatByID)
 }
 
-// CreateChat creates a new conversation.
-func (h *ConversationHandler) CreateChat(c *gin.Context) {
+// CreatePrivateChat handles the creation or retrieval of a private chat between two users.
+func (h *ConversationHandler) CreatePrivateChat(c *gin.Context) {
 	userID, err := security.ExtractUserID(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
@@ -36,9 +37,39 @@ func (h *ConversationHandler) CreateChat(c *gin.Context) {
 	}
 
 	var req struct {
-		Type    domain.ConversationType   `json:"type" binding:"required"`
-		Name    *string  `json:"name"`
-		Members []string `json:"members"` // UUID w stringach
+		RecipientID string `json:"recipient_id" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	recipientID, err := uuid.Parse(req.RecipientID)
+	if err != nil || recipientID == userID {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid recipient_id"})
+		return
+	}
+
+	chatID, err := h.useCase.GetOrCreatePrivateConversation(userID, recipientID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get or create private chat"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"id": chatID})
+}
+
+// CreateChannelChat creates a new group or channel chat.
+func (h *ConversationHandler) CreateChannelChat(c *gin.Context) {
+	userID, err := security.ExtractUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var req struct {
+		Name    string   `json:"name" binding:"required"`
+		Members []string `json:"members"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -48,10 +79,10 @@ func (h *ConversationHandler) CreateChat(c *gin.Context) {
 
 	conv := &domain.Conversation{
 		ID:   uuid.New(),
-		Type: req.Type,
-		Name: req.Name,
+		Type: domain.Channel,
+		Name: &req.Name,
 		Members: []domain.ConversationMember{
-			{UserID: userID, Role: "admin"}, // zakładając, że autor jest adminem
+			{UserID: userID, Role: "admin"},
 		},
 	}
 
@@ -67,7 +98,7 @@ func (h *ConversationHandler) CreateChat(c *gin.Context) {
 	}
 
 	if err := h.useCase.CreateConversation(conv); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create chat"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create channel"})
 		return
 	}
 

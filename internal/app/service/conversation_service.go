@@ -31,9 +31,30 @@ func (s *ConversationService) GetUserConversations(userID uuid.UUID) ([]domain.C
 	return s.conversationRepo.GetAllByUserID(userID)
 }
 
-// CreateConversation creates a new conversation.
-func (s *ConversationService) CreateConversation(conv *domain.Conversation) error {
-	return s.conversationRepo.Create(conv)
+// GetOrCreatePrivateConversation checks if a private chat exists, returns its ID or creates one.
+func (s *ConversationService) GetOrCreatePrivateConversation(userID, recipientID uuid.UUID) (uuid.UUID, error) {
+	// Check if the conversation already exists
+	existingID, err := s.conversationRepo.FindPrivateConversationIDBetweenUsers(userID, recipientID)
+	if err != nil {
+		return uuid.Nil, err
+	}
+	if existingID != nil {
+		return *existingID, nil
+	}
+
+	// Create new conversation
+	conv := &domain.Conversation{
+		ID:   uuid.New(),
+		Type: domain.Private,
+		Members: []domain.ConversationMember{
+			{UserID: userID, Role: "member"},
+			{UserID: recipientID, Role: "member"},
+		},
+	}
+	if err := s.conversationRepo.Create(conv); err != nil {
+		return uuid.Nil, err
+	}
+	return conv.ID, nil
 }
 
 
@@ -48,4 +69,9 @@ func (s *ConversationService) GetConversationByID(conversationID, userID uuid.UU
 	}
 
 	return s.conversationRepo.GetByID(conversationID)
+}
+
+// CreateConversation creates a new conversation (channel or group).
+func (s *ConversationService) CreateConversation(conv *domain.Conversation) error {
+	return s.conversationRepo.Create(conv)
 }
